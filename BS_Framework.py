@@ -4,33 +4,37 @@ Created on Tue Oct 31 18:23:54 2017
 
 @author: Peter Nicholas Allen 
 """
-
 from math import *
 from numpy import *
 from scipy.stats import norm
-import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+from IPython import get_ipython
+from matplotlib import cm
+import numpy as np
    
-    
 class BS:
-    def __init__(self, stokePrice, strike, timeMat, intRate, divYield, sigma):
+    def __init__(self, stokePrice, strike, timeMat, intRate, divYield, sigma, modelType):
         self.stokePrice = stokePrice
         self.strike  = strike  
         self.timeMat = timeMat
         self.intRate = intRate
         self.divYield = divYield
         self.sigma = sigma
-        self.dayCount = 365.0
         self.newLine = "\n"
         self.sep = "---------------"
-        
-   
-    def fullSummary(self):
+        self.dayCount = 365.0
+        self.rateScaler = 100.0
+        self.bpScaler = 10000.0
+        self.modelType = modelType
+                    
+    #Full summary
+    def summary(self):
         self.pricingSummary()
         self.greekSummary()
-    
-    
-    
+        self.tradeSummary()
+     
+    #Pricing Summary 
     def pricingSummary(self):
         out = "Option Pricing Summary"+ self.newLine
         out = out + self.sep + self.newLine + "Input Parameters" + self.newLine + self.sep + self.newLine
@@ -46,7 +50,7 @@ class BS:
         out = out + "-------END--------" + self.newLine
         print(out)
     
-    
+        #Greeks Summary 
     def greekSummary(self):
         out = "Option Greeks Summary"+ self.newLine
         out = out + self.sep + self.newLine 
@@ -58,76 +62,160 @@ class BS:
         out = out + "p_theta: {}".format(self.p_theta()) + self.newLine 
         out = out + "-------END-------"+ self.newLine 
         print(out)
-
-    
-    def get3DplotOptPrice(self):
-        stokePrice_array = []
-        timeMat_array = []
-        optPrce_array = []
         
+    #Greeks Summary 
+    def tradeSummary(self):
+        out = "Trade Summary"+ self.newLine
+        out = out + self.sep + self.newLine 
+        out = out + "Delta neutral strike is: {}".format(self.deltaNeutralStrike()) + self.newLine
+        out = out + "-------END-------"+ self.newLine 
+        print(out)    
         
-    
-
-    
-    def callOptPrice(self):
-        return exp(- self.divYield) * self.stokePrice * N(self.d1()) - exp(- self.intRate) * self.strike * N(self.d2())
-    
-    def putOptPrice(self):   
-        return exp(- self.intRate) * self.strike * N(- self.d2()) - exp(- self.divYield) * self.stokePrice * N(- self.d1())
-    
-    def putCallParityPutPrice(self):
-        return self.callOptPrice() - exp(-self.divYield)*self.stokePrice + exp(-self.intRate)*self.stokePrice
-    
-    def putCallParityCallPrice(self):
-        return self.putOptPrice() + exp(-self.divYield)*self.stokePrice - exp(-self.intRate)*self.stokePrice
-    
-    def c_delta(self):
-        return exp(- self.divYield) * N(self.d1())
-    
-    def p_delta(self):
-        return exp(- self.divYield) * ( 1.0 - N(self.d1()))
-    
-    def gamma(self):
-        top = exp(- self.divYield) * dN(self.d1())
-        bott = self.sigma * self.stokePrice * sqrt(self.timeMat)
-        return top / bott   
-    
-    def vega(self):
-        return self.stokePrice * sqrt(self.timeMat) * exp(- self.divYield * self.timeMat) * dN(self.d1()) / 100
-    
-    def c_theta(self):
-        top = - self.sigma * self.stokePrice * exp(- self.divYield * self.timeMat) * dN(self.d1())
-        bott = 2.0 * sqrt(self.timeMat)
-        term1 = top / bott
-        term2 = self.divYield * self.stokePrice * exp(- self.divYield * self.timeMat) * N(self.d1())
-        term3 = - self.intRate * self.strike * exp(-self.intRate * self.timeMat) * N(self.d2())
-        return (term1 + term2 + term3) / self.dayCount
-    
-    def p_theta(self):
-        top = - self.sigma * self.stokePrice * exp(- self.divYield * self.timeMat) * dN(self.d1())
-        bott = 2.0 * sqrt(self.timeMat)
-        term1 = top / bott
-        term2 = - self.divYield * self.stokePrice * exp(- self.divYield * self.timeMat) * N(self.d1())
-        term3 = self.intRate * self.strike * exp(-self.intRate * self.timeMat) * N(self.d2())
-        return term1 + term2 + term3
-    
-    def rho(self):
-        return self.timeMat * self.strike * exp(- self.intRate * self.timeMat) * N(self.d2())
-    
-    def psi(self):
-        return - self.timeMat * self.stokePrice * exp(- self.divYield * self.timeMat) * N(self.d1())
-    
+    #Pricing 
     def d1(self):
-        top = log(self.stokePrice / self.strike) + (self.intRate - self.divYield + 0.5*self.sigma*self.sigma)*self.timeMat
+        if self.modelType == 'Espen':
+            top = log(self.stokePrice / self.strike) + (self.divYield + 0.5*self.sigma*self.sigma)*self.timeMat
+        elif self.modelType == 'Norm':
+            top = log(self.stokePrice / self.strike) + (self.intRate - self.divYield + 0.5*self.sigma*self.sigma)*self.timeMat
         bott = self.sigma * sqrt(self.timeMat)
         return top/ bott
     
     def d2(self):
-        return self.d1() - self.sigma * sqrt(self.timeMat)    
+        return self.d1() - self.sigma * sqrt(self.timeMat)
+    
+    def callOptPrice(self):
+        return exp((self.divYield - self.intRate)*self.timeMat) * self.stokePrice * N(self.d1()) - exp(- self.intRate*self.timeMat) * self.strike * N(self.d2())
+    
+    def putOptPrice(self):   
+        return exp(- self.intRate*self.timeMat) * self.strike * N(- self.d2()) - exp((self.divYield - self.intRate)*self.timeMat) * self.stokePrice * N(- self.d1())
+    
+    def putCallParityPutPrice(self):
+        return self.callOptPrice() - exp((self.divYield -   self.intRate)*self.timeMat)*self.stokePrice + exp(-self.intRate*self.timeMat)*self.strike
+    
+    def putCallParityCallPrice(self):
+        return self.putOptPrice() + exp((self.divYield - self.intRate)*self.timeMat)*self.stokePrice - exp(-self.intRate*self.timeMat)*self.strike
+    
+    #Greeks
+    def c_delta(self):
+        return exp((self.divYield - self.intRate)*self.timeMat) * N(self.d1())
+    
+    def p_delta(self):
+        return - exp((self.divYield - self.intRate)*self.timeMat) * (N(-self.d1()))
+    
+    def gamma(self):
+        top = exp((self.divYield - self.intRate)*self.timeMat)*dN(self.d1())
+        bott = self.sigma*self.stokePrice*sqrt(self.timeMat)
+        return top / bott
+    
+    def gammaP(self):
+        return (100 * self.gamma()) / self.stokePrice
+    
+    def vega(self):
+        return self.stokePrice*sqrt(self.timeMat)*exp((self.divYield - self.intRate)*self.timeMat)*dN(self.d1()) / 100
+    
+    def c_theta(self):
+        top = - self.sigma*self.stokePrice*exp((self.divYield - self.intRate)*self.timeMat) * dN(self.d1())
+        bott = 2.0 * sqrt(self.timeMat)
+        term1 = top / bott
+        term2 = - (self.divYield - self.intRate) * self.stokePrice * exp((self.divYield - self.intRate) * self.timeMat) * N(self.d1())
+        term3 = - self.intRate * self.strike * exp(-self.intRate * self.timeMat) * N(self.d2())
+        return (term1 + term2 + term3) /  self.dayCount
+    
+    def p_theta(self):
+        top = - self.sigma * self.stokePrice * exp((self.divYield - self.intRate) * self.timeMat) * dN(self.d1())
+        bott = 2.0 * sqrt(self.timeMat)
+        term1 = top / bott
+        term2 = (self.divYield - self.intRate) * self.stokePrice * exp((self.divYield - self.intRate) * self.timeMat) * N(-self.d1())
+        term3 =  self.intRate * self.strike * exp(-self.intRate * self.timeMat) * N(-self.d2())
+        return (term1 + term2 + term3) /  self.dayCount
+    
+    def c_rho(self):
+        return self.timeMat * self.strike * exp(- self.intRate * self.timeMat) * N(self.d2()) / self.rateScaler
+    
+    def p_rho(self):
+        return -self.timeMat * self.strike * exp(- self.intRate * self.timeMat) * N(-self.d2()) / self.rateScaler
+    
+    def c_psi(self):
+        return -self.timeMat * self.stokePrice * exp((self.divYield - self.intRate) * self.timeMat) * N(self.d1()) / self.rateScaler
+    
+    def p_psi(self):
+        return self.timeMat * self.stokePrice * exp((self.divYield - self.intRate) * self.timeMat) * N(-self.d1()) / self.rateScaler 
+    
+    def c_carry(self):
+        return self.timeMat * self.stokePrice * exp((self.divYield - self.intRate) * self.timeMat) * N(self.d1()) / self.rateScaler
+    
+    def p_carry(self):
+        return -self.timeMat * self.stokePrice * exp((self.divYield - self.intRate) * self.timeMat) * N(-self.d1()) / self.rateScaler 
 
-   
+    def DdeltaDvol(self):
+        return (- exp((self.divYield - self.intRate)*self.timeMat)*dN(self.d1())*self.d2() / self.sigma) / self.rateScaler
+    
+    def DdeltaDtime(self):
+        a = self.divYield / (self.sigma*sqrt(self.timeMat))
+        b = self.d2() / (2.0 *self.timeMat)
+        term2 = dN(self.d1())*(a - b)
+        term3 = (self.divYield - self.intRate)*N(self.d1())
+        return (exp((self.divYield - self.intRate)*self.timeMat) * (term2 + term3)) / self.dayCount
+    
+    #Trade Choices
+    def deltaNeutralStrike(self):
+        return ((self.stokePrice*self.stokePrice) / self.strike) * exp(2.0 * (self.divYield + 0.5 * self.sigma * self.sigma)*self.timeMat)
+    
+    def plot3dSurface(self, plotType, PlotInOutConsole):
+        if PlotInOutConsole == 'IN':
+            get_ipython().run_line_magic('matplotlib', 'inline')
+        elif PlotInOutConsole == 'OUT':
+            get_ipython().run_line_magic('matplotlib', 'qt')
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        X = np.arange(0, self.strike*2, 5)
+        Y = np.arange(0, self.timeMat*2.0, 0.05)
+        X, Y = np.meshgrid(X, Y)
+        Op = BS( X , self.strike, Y, self.intRate, self.divYield , self.sigma, self.modelType)
+        Z = self.callPlotType(plotType, Op)
+        surface = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,linewidth=0, antialiased=False)    
+        fig.colorbar(surface, shrink=0.5, aspect=5)
+        plt.show()
+    
+    def callPlotType(self, plotType, BS):
+        if plotType == 'c_delta':
+            Z = BS.c_delta()
+        elif plotType == 'p_delta':
+            Z =  BS.p_delta()
+        elif plotType == 'gamma':
+            Z =  BS.gamma()
+        elif plotType == 'gammaP':
+            Z =  BS.gammaP()
+        elif plotType == 'vega':
+            Z =  BS.vega()
+        elif plotType == 'c_theta':
+            Z =  BS.c_theta()
+        elif plotType == 'p_theta':
+            Z =  BS.p_theta()
+        elif plotType == 'c_rho':
+            Z =  BS.c_rho()  
+        elif plotType == 'p_rho':
+            Z =  BS.p_rho()   
+        elif plotType == 'c_psi':
+             Z =  BS.c_psi()
+        elif plotType == 'p_psi':
+             Z =  BS.p_psi()
+        elif plotType == 'c_carry':
+             Z =  BS.c_carry()
+        elif plotType == 'p_carry':
+             Z =  BS.p_carry()
+        elif plotType =='DdeltaDvol':
+            Z = BS.DdeltaDvol()
+        elif plotType == 'DdeltaDtime':
+            Z = BS.DdeltaDtime()
+        return Z      
+  
 def N(X):
         return norm.cdf(X)   
     
+def n(X):
+        return norm.ppf(X)
+    
 def dN(X):
         return (1/sqrt(2*pi)) * exp(- 0.5 * X * X)
+    

@@ -7,10 +7,17 @@ Created on Tue Oct 31 20:37:54 2017
 
 """
 
-from BS_Framework import *
-import matplotlib as plt
-#Initilise Class
-O = BS(100, 100, 1.0, 0.0, 0.00,0.20)
 
-#Full Option Summary
-O.fullSummary()
+from BS_Framework import *
+from UnitTesting import *
+from GUI import *
+from warnings import * 
+
+
+
+startUnitTest()
+
+#startGUI()
+
+##Initilise Class
+#O_Espen = BS(100, 100, 1.0, 0.05, 0.02,0.2,'Espen')
