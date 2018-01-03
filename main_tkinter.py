@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Dec 27 10:44:36 2017
-
 @author: peallen
 """
 
@@ -178,10 +177,40 @@ class RiskExposures(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Risk Exposures", font=LARGE_FONT)
-        label.grid(row=0, column=10)
+        label.place(relx=.50, rely=.0)  
+        
 
+        self.optionTradeDetailsForPlot = array(["Strike:","Start Date (dd-mm-yyyy):","Maturity (dd-mm-yyyy):","Sigma %:","Interest rate %:","Dividend Yield %:"])
+        self.option_entry_list = [None]*len(self.optionTradeDetailsForPlot)
+        
+        self.dropDownDefaultStrBuySell= StringVar(self)
+        self.dropDownDefaultStrCallPut = StringVar(self)
+        self.dropDownDefaultStrBuySell.set("Select Buy/Sell")
+        self.dropDownDefaultStrCallPut.set("Select Put/Call")
+        self.option_CallPut = array(["Call","Put"])
+        self.option_BuySell = array(["Buy","Sell"])
+        
+        BuySellList = OptionMenu(self, self.dropDownDefaultStrBuySell, * self.option_BuySell )
+        BuySellList.place(x =250 , y= 100) 
+        
+        CallPutList = OptionMenu(self, self.dropDownDefaultStrCallPut, * self.option_CallPut )
+        CallPutList.place(x =250 , y= 150) 
+        
+        
+        for i in range(0, len( self.option_entry_list)):
+            Label(self, text=self.optionTradeDetailsForPlot[i]).place(x =50 , y=(200 + i*50)) 
+            self.option_entry_list[i] = ttk.Entry(self)
+            self.option_entry_list[i].place(x =250 , y=(200 + i*50))   
+            
         Button_BackHome = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(StartPage))
-        Button_BackHome.grid(row=8, column=3)
+        Button_BackHome.place(x =50 , y= 10 ) 
+        
+        def ClearTradeDetails(self):
+            for i in range(0, len(self.option_entry_list)):
+                self.optionTradeDetailsForPlot[i].delete(0, 'end')
+     
+        
+
 
 app = TradeManager()
 app.geometry("850x650+350+350")
