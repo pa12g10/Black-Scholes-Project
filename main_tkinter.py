@@ -1,51 +1,21 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Dec 27 10:44:36 2017
+
 @author: peallen
 """
 
-from pandas import *	
-from datetime import *
-from tkinter import *
-import tkinter as tk
-from tkinter import ttk
-from pandas import *
-from numpy import *
-import matplotlib as plt
-import pandas as pd
+from InputParameters import *
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 
-LARGE_FONT= ("Verdana", 12)
-NORM_FONT= ("Verdana", 10)
-YesNo = 0
-
-def tradeConfirmation(msg):
-    def NO_func():
-        global YesNo
-        popup.destroy()
-        YesNo = 0
-        
-    def YES_func():
-        global YesNo
-        popup.destroy()
-        YesNo = 1
-     
-    popup = tk.Tk()
-    popup.wm_title("Message")
-    label = ttk.Label(popup, text=msg, font=NORM_FONT)
-    label.pack(side="top", fill="x",pady=10)
-    B1 = ttk.Button(popup, text = "Yes", command =  YES_func)
-    B2 = ttk.Button(popup, text = "No", command =  NO_func)
-    B1.pack()    
-    B2.pack()
-    popup.mainloop()
-    return YesNo
+BS = BS(100, 100, 1,1,1,1,'Espen')
 
 class TradeManager(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         #tk.Tk.iconbitmap(self, default="clienticon.ico")
-        tk.Tk.wm_title(self, "Trade Manager")
+        tk.Tk.wm_title(self, "Trade Manager"+ VersionNumber)
 
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
@@ -54,7 +24,7 @@ class TradeManager(tk.Tk):
 
         self.frames = {}
 
-        for F in (StartPage, TradePositions,RiskExposures):
+        for F in (StartPage, TradePositions,RiskExposures,SurfacePlotter):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -70,20 +40,29 @@ class StartPage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
-        label = tk.Label(self, text=("Equity Option Tool Manager"), font=LARGE_FONT)
+        label = tk.Label(self, text=("Equity Option Tool Manager"), font=LARGER_FONT)
         label.place(relx=.4, rely=.10) 
+        
+        image = Image.open(photoName)
+        image = image.resize((350,350))
+        photo = ImageTk.PhotoImage(image)
+        label = tk.Label(self,image=photo)
+        label.image = photo # keep a reference!
+        label.place(relx=.10, rely=.25)
 
         Button_TradePositions = ttk.Button(self, text="Trade Positions", command=lambda: controller.show_frame(TradePositions))
         Button_TradePositions.place(relx=.50, rely=.30) 
 
         Button_RiskPositions = ttk.Button(self, text="Risk Exposures" , command=lambda: controller.show_frame(RiskExposures))
         Button_RiskPositions.place(relx=.50, rely=.45)  
+        
+        Button_SurfacePlotter = ttk.Button(self, text="Surface Plotter" , command=lambda: controller.show_frame(SurfacePlotter))
+        Button_SurfacePlotter.place(relx=.50, rely=.60)  
 
 
 class TradePositions(tk.Frame):
             
     def __init__(self, parent, controller):
-        self.DataBaseFileName = "TradeDatabase.csv"
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Trade Positions", font=LARGE_FONT)
         label.place(relx=.50, rely=.0)  
@@ -95,20 +74,16 @@ class TradePositions(tk.Frame):
         self.dropDownDefaultStrBuySell.set("Select Buy/Sell")
         self.dropDownDefaultStrCallPut.set("Select Put/Call")
         
-        self.option_trade_economic_title = array(["Contract Size:","Quantity:","Strike:","Start Date (dd-mm-yyyy):","Maturity (dd-mm-yyyy):","Interest rate:","Dividend Yield"])
-        self.option_entry_list = [None]*len(self.option_trade_economic_title)
-        self.option_underlyings = array(["UKX Index","SPX Index","SX5E Index","NKY Index"])
-        self.option_BuySell = array(["Buy","Sell"])
-        self.option_CallPut = array(["Call","Put"])
+        self.option_entry_list = [None]*len(option_trade_economic_title)
         
 
-        underlyingList = OptionMenu(self, self.dropDownDefaultStrUnderlying, * self.option_underlyings )
+        underlyingList = OptionMenu(self, self.dropDownDefaultStrUnderlying, * option_underlyings )
         underlyingList.place(x =250 , y= 50 ) 
         
-        BuySellList = OptionMenu(self, self.dropDownDefaultStrBuySell, * self.option_BuySell )
+        BuySellList = OptionMenu(self, self.dropDownDefaultStrBuySell, * option_BuySell )
         BuySellList.place(x =250 , y= 100) 
         
-        CallPutList = OptionMenu(self, self.dropDownDefaultStrCallPut, * self.option_CallPut )
+        CallPutList = OptionMenu(self, self.dropDownDefaultStrCallPut, * option_CallPut )
         CallPutList.place(x =250 , y= 150) 
         
         Button_BackHome = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(StartPage))
@@ -125,7 +100,7 @@ class TradePositions(tk.Frame):
         
         
         for i in range(0, len( self.option_entry_list)):
-            Label(self, text=self.option_trade_economic_title[i]).place(x =50 , y=(200 + i*50)) 
+            Label(self, text=option_trade_economic_title[i]).place(x =50 , y=(200 + i*50)) 
             self.option_entry_list[i] = ttk.Entry(self)
             self.option_entry_list[i].place(x =250 , y=(200 + i*50)) 
     
@@ -135,7 +110,7 @@ class TradePositions(tk.Frame):
     
     def BookTrade(self):
         NewTradeID = self.getNewTradeID()
-        with open(self.DataBaseFileName, "a") as TradeDatabase:
+        with open(DataBaseFileName, "a") as TradeDatabase:
             TradeDatabase.write(str(NewTradeID) + ';')
             TradeDatabase.write(self.dropDownDefaultStrUnderlying.get() + ';')
             TradeDatabase.write(self.dropDownDefaultStrBuySell.get() + ';')
@@ -147,7 +122,7 @@ class TradePositions(tk.Frame):
             TradeDatabase.close()
     
     def getNewTradeID(self):
-        with open(self.DataBaseFileName) as TradeDatabase:
+        with open(DataBaseFileName) as TradeDatabase:
            TradeID = int(list(TradeDatabase)[-1][:6]) + 1
         TradeDatabase.close()
         return TradeID
@@ -155,20 +130,20 @@ class TradePositions(tk.Frame):
     def refreshPositionsList(self):
         TradeDatabase = pd.read_csv('TradeDatabase.csv', sep=';')
         TradeDatabase = TradeDatabase.as_matrix()
-        t = Text(self, height=25, width=125)
-        s = Scrollbar(self)
-        t.config(state=NORMAL)
-        s.place(in_=t, relx=1.0, relheight=1.0, bordermode="inside")
-        s.config(command=t.yview)
-        t.config(yscrollcommand=s.set)
-        t.delete(1.0, END)
+        textBox = Text(self, height=25, width=125)
+        scrollBar = Scrollbar(self)
+        textBox.config(state=NORMAL)
+        scrollBar.place(in_=textBox, relx=1.0, relheight=1.0, bordermode="inside")
+        scrollBar.config(command=textBox.yview)
+        textBox.config(yscrollcommand=scrollBar.set)
+        textBox.delete(1.0, END)
         for y in range(0, len(TradeDatabase)):
             for x in TradeDatabase[y]:
-                t.insert(END, x)
-                t.insert(END,' | ')
-            t.insert(END,'\n')
-        t.place(x =500 , y=100)
-        t.config(state=DISABLED)
+                textBox.insert(END, x)
+                textBox.insert(END,' | ')
+            textBox.insert(END,'\n')
+        textBox.place(x =500 , y=100)
+        textBox.config(state=DISABLED)
                 
     
             
@@ -179,26 +154,22 @@ class RiskExposures(tk.Frame):
         label = tk.Label(self, text="Risk Exposures", font=LARGE_FONT)
         label.place(relx=.50, rely=.0)  
         
-
-        self.optionTradeDetailsForPlot = array(["Strike:","Start Date (dd-mm-yyyy):","Maturity (dd-mm-yyyy):","Sigma %:","Interest rate %:","Dividend Yield %:"])
-        self.option_entry_list = [None]*len(self.optionTradeDetailsForPlot)
+        self.option_entry_list = [None]*len(optionTradeDetailsForPlot)
         
         self.dropDownDefaultStrBuySell= StringVar(self)
-        self.dropDownDefaultStrCallPut = StringVar(self)
+        self.dropDownDefaultStrPlotType = StringVar(self)
         self.dropDownDefaultStrBuySell.set("Select Buy/Sell")
-        self.dropDownDefaultStrCallPut.set("Select Put/Call")
-        self.option_CallPut = array(["Call","Put"])
-        self.option_BuySell = array(["Buy","Sell"])
+        self.dropDownDefaultStrPlotType.set("Select Plot Type")
         
-        BuySellList = OptionMenu(self, self.dropDownDefaultStrBuySell, * self.option_BuySell )
+        BuySellList = OptionMenu(self, self.dropDownDefaultStrBuySell, * option_BuySell )
         BuySellList.place(x =250 , y= 100) 
         
-        CallPutList = OptionMenu(self, self.dropDownDefaultStrCallPut, * self.option_CallPut )
-        CallPutList.place(x =250 , y= 150) 
+        PlotTypeList = OptionMenu(self, self.dropDownDefaultStrPlotType, * plot_types )
+        PlotTypeList.place(x =250 , y= 150) 
         
         
         for i in range(0, len( self.option_entry_list)):
-            Label(self, text=self.optionTradeDetailsForPlot[i]).place(x =50 , y=(200 + i*50)) 
+            Label(self, text=optionTradeDetailsForPlot[i]).place(x =50 , y=(200 + i*50)) 
             self.option_entry_list[i] = ttk.Entry(self)
             self.option_entry_list[i].place(x =250 , y=(200 + i*50))   
             
@@ -207,11 +178,59 @@ class RiskExposures(tk.Frame):
         
         def ClearTradeDetails(self):
             for i in range(0, len(self.option_entry_list)):
-                self.optionTradeDetailsForPlot[i].delete(0, 'end')
-     
+                optionTradeDetailsForPlot[i].delete(0, 'end')
+                
+class SurfacePlotter(tk.Frame):
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = tk.Label(self, text="Surface Plotter", font=LARGE_FONT)
+        label.place(relx=.50, rely=.0)  
         
+        self.option_entry_list = [None]*len(optionTradeDetailsForPlot)
+        
+        self.dropDownDefaultStrBuySell= StringVar(self)
+        self.dropDownDefaultStrPlotType = StringVar(self)
+        self.dropDownDefaultStrBSModelType= StringVar(self)
+        self.dropDownDefaultStrBuySell.set("Select Buy/Sell")
+        self.dropDownDefaultStrPlotType.set("Select Plot Type")
+        self.dropDownDefaultStrBSModelType.set("Select BS Model Type")
+        
+        BuySellList = OptionMenu(self, self.dropDownDefaultStrBuySell, * option_BuySell )
+        BuySellList.place(x =250 , y= 100) 
+        
+        PlotTypeList = OptionMenu(self, self.dropDownDefaultStrPlotType, * plot_types )
+        PlotTypeList.place(x =250 , y= 150) 
+        
+        BSModelTypeList = OptionMenu(self, self.dropDownDefaultStrBSModelType, * BS_Model_type )
+        BSModelTypeList.place(x =250 , y= 200) 
+        
+        Button_PlotCurve = ttk.Button(self, text="Plot Curve",  command=self.plotSurface3DSurface)
+        Button_PlotCurve.place(x =100 , y=600) 
+        
+        Button_BackHome = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(StartPage))
+        Button_BackHome.place(x =50 , y= 10 ) 
+        
+        for i in range(0, len( self.option_entry_list)):
+            Label(self, text=optionTradeDetailsForPlot[i]).place(x =50 , y=(250 + i*50)) 
+            self.option_entry_list[i] = ttk.Entry(self)
+            self.option_entry_list[i].place(x =250 , y=(250 + i*50))   
+            
 
+    def plotSurface3DSurface(self):
+        global BS
+        BS.setParameters(100, float(self.option_entry_list[0].get()), float(self.option_entry_list[1].get()),
+                 float(self.option_entry_list[2].get()),float(self.option_entry_list[3].get()),
+                  float(self.option_entry_list[4].get()), self.dropDownDefaultStrBSModelType.get())
+        f = BS.plot3dSurfaceTkinter(self.dropDownDefaultStrPlotType.get())
+        canvas = FigureCanvasTkAgg(f, self)
+        canvas.show()
+        canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+#        toolbar = NavigationToolbar2TkAgg(canvas, self)
+#        toolbar.update()
+        canvas._tkcanvas.place(x =400 , y= 100 )       
 
+        
 app = TradeManager()
 app.geometry("850x650+350+350")
 app.mainloop()

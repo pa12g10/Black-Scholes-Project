@@ -7,14 +7,32 @@ Created on Tue Oct 31 18:23:54 2017
 from math import *
 from numpy import *
 from scipy.stats import norm
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
 from IPython import get_ipython
-from matplotlib import cm
 import numpy as np
-   
+from matplotlib import cm 
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D 
+
+fig = plt.figure()
+fig.set_size_inches(14, 9)
+sub = fig.add_subplot(1,1,1, projection = "3d")
+
 class BS:
     def __init__(self, stokePrice, strike, timeMat, intRate, divYield, sigma, modelType):
+        self.stokePrice = stokePrice
+        self.strike  = strike  
+        self.timeMat = timeMat
+        self.intRate = intRate
+        self.divYield = divYield
+        self.sigma = sigma
+        self.newLine = "\n"
+        self.sep = "---------------"
+        self.dayCount = 365.0
+        self.rateScaler = 100.0
+        self.bpScaler = 10000.0
+        self.modelType = modelType
+    
+    def setParameters(self, stokePrice, strike, timeMat, intRate, divYield, sigma, modelType):
         self.stokePrice = stokePrice
         self.strike  = strike  
         self.timeMat = timeMat
@@ -176,6 +194,16 @@ class BS:
         surface = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,linewidth=0, antialiased=False)    
         fig.colorbar(surface, shrink=0.5, aspect=5)
         plt.show()
+        
+    def plot3dSurfaceTkinter(self,plotType):
+        X = np.arange(0,  self.strike*2, 5)
+        Y = np.arange(0,  self.timeMat, 0.05)
+        X,Y = np.meshgrid(X,Y)
+        self.setParameters( X ,  self.strike, Y,  self.intRate,  self.divYield ,  self.sigma,  self.modelType)
+        Z = self.callPlotType(plotType, self)
+        sub.clear()
+        sub.plot_surface(X,Y,Z)
+        return fig
     
     def callPlotType(self, plotType, BS):
         if plotType == 'c_delta':
