@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Dec 27 10:44:36 2017
-
 @author: peallen
 """
 
@@ -40,16 +39,9 @@ class StartPage(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
-        label = tk.Label(self, text=("Equity Option Tool Manager"), font=LARGER_FONT)
+        label = tk.Label(self, text=("Equity Option Tool Manager"), font=LLLARGE_FONT)
         label.place(relx=.4, rely=.10) 
         
-        image = Image.open(photoName)
-        image = image.resize((350,350))
-        photo = ImageTk.PhotoImage(image)
-        label = tk.Label(self,image=photo)
-        label.image = photo # keep a reference!
-        label.place(relx=.10, rely=.25)
-
         Button_TradePositions = ttk.Button(self, text="Trade Positions", command=lambda: controller.show_frame(TradePositions))
         Button_TradePositions.place(relx=.50, rely=.30) 
 
@@ -64,7 +56,7 @@ class TradePositions(tk.Frame):
             
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Trade Positions", font=LARGE_FONT)
+        label = tk.Label(self, text="Trade Positions", font=LLLARGE_FONT)
         label.place(relx=.50, rely=.0)  
         
         self.dropDownDefaultStrUnderlying = StringVar(self)
@@ -151,40 +143,33 @@ class RiskExposures(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Risk Exposures", font=LARGE_FONT)
+        label = tk.Label(self, text="Risk Exposures", font=LLLARGE_FONT)
         label.place(relx=.50, rely=.0)  
         
-        self.option_entry_list = [None]*len(optionTradeDetailsForPlot)
+        self.option_stock_price_entry = [None]*len(option_underlyings)
+        self.option_greek_entry = [None]*len(option_greeks)
         
-        self.dropDownDefaultStrBuySell= StringVar(self)
-        self.dropDownDefaultStrPlotType = StringVar(self)
-        self.dropDownDefaultStrBuySell.set("Select Buy/Sell")
-        self.dropDownDefaultStrPlotType.set("Select Plot Type")
-        
-        BuySellList = OptionMenu(self, self.dropDownDefaultStrBuySell, * option_BuySell )
-        BuySellList.place(x =250 , y= 100) 
-        
-        PlotTypeList = OptionMenu(self, self.dropDownDefaultStrPlotType, * plot_types )
-        PlotTypeList.place(x =250 , y= 150) 
-        
-        
-        for i in range(0, len( self.option_entry_list)):
-            Label(self, text=optionTradeDetailsForPlot[i]).place(x =50 , y=(200 + i*50)) 
-            self.option_entry_list[i] = ttk.Entry(self)
-            self.option_entry_list[i].place(x =250 , y=(200 + i*50))   
-            
         Button_BackHome = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(StartPage))
         Button_BackHome.place(x =50 , y= 10 ) 
         
-        def ClearTradeDetails(self):
-            for i in range(0, len(self.option_entry_list)):
-                optionTradeDetailsForPlot[i].delete(0, 'end')
+        Label(self, text="Enter Underlying Spot Prices:", font=LLARGE_FONT).place(x =400  , y=95)  
+        for i in range(0, len( self.option_stock_price_entry)):
+            Label(self, text=option_underlyings[i]).place(x =(700 + i*150) , y=75 ) 
+            self.option_stock_price_entry[i] = ttk.Entry(self)
+            self.option_stock_price_entry[i].place(x =(675 + i*150) , y=100) 
+        
+        Label(self, text="Portfolio Greeks Break Down", font=LLARGE_FONT).place(x =50 , y=250) 
+        for i in range(0, len( self.option_greek_entry)):
+            Label(self, text=option_greeks[i]).place(x =50 , y=(300 + i*75)) 
+            self.option_greek_entry[i] = ttk.Entry(self)
+            self.option_greek_entry[i].place(x =150 , y=(300 + i*75))    
+        
                 
 class SurfacePlotter(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Surface Plotter", font=LARGE_FONT)
+        label = tk.Label(self, text="Surface Plotter", font=LLLARGE_FONT)
         label.place(relx=.50, rely=.0)  
         
         self.option_entry_list = [None]*len(optionTradeDetailsForPlot)
@@ -226,8 +211,6 @@ class SurfacePlotter(tk.Frame):
         canvas = FigureCanvasTkAgg(f, self)
         canvas.show()
         canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-#        toolbar = NavigationToolbar2TkAgg(canvas, self)
-#        toolbar.update()
         canvas._tkcanvas.place(x =400 , y= 100 )       
 
         
