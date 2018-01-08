@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Dec 27 10:44:36 2017
+
 @author: peallen
 """
 
@@ -8,6 +9,7 @@ from InputParameters import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 
 BS = BS(100, 100, 1,1,1,1,'Espen')
+now = datetime.now()
 
 class TradeManager(tk.Tk):
 
@@ -42,9 +44,16 @@ class StartPage(tk.Frame):
         label = tk.Label(self, text=("Equity Option Tool Manager"), font=LLLARGE_FONT)
         label.place(relx=.4, rely=.10) 
         
+        image = Image.open(photoName)
+        image = image.resize((350,350))
+        photo = ImageTk.PhotoImage(image)
+        label = tk.Label(self,image=photo)
+        label.image = photo # keep a reference!
+        label.place(relx=.10, rely=.25)
+
         Button_TradePositions = ttk.Button(self, text="Trade Positions", command=lambda: controller.show_frame(TradePositions))
         Button_TradePositions.place(relx=.50, rely=.30) 
-
+        
         Button_RiskPositions = ttk.Button(self, text="Risk Exposures" , command=lambda: controller.show_frame(RiskExposures))
         Button_RiskPositions.place(relx=.50, rely=.45)  
         
@@ -95,6 +104,7 @@ class TradePositions(tk.Frame):
             Label(self, text=option_trade_economic_title[i]).place(x =50 , y=(200 + i*50)) 
             self.option_entry_list[i] = ttk.Entry(self)
             self.option_entry_list[i].place(x =250 , y=(200 + i*50)) 
+            self.option_entry_list[i].insert(0, option_entry_list_BookTrade[i])
     
     def ClearTradeDetails(self):
         for i in range(0, len(self.option_entry_list)):
@@ -109,7 +119,7 @@ class TradePositions(tk.Frame):
             TradeDatabase.write(self.dropDownDefaultStrCallPut.get() + ';')           
             for i in range(0, len(self.option_entry_list)):
                 TradeDatabase.write(self.option_entry_list[i].get() + ';')
-            TradeDatabase.write(str(datetime.now())) 
+            TradeDatabase.write(str(now.strftime("%d-%m-%Y"))) 
             TradeDatabase.write('\n')             
             TradeDatabase.close()
     
@@ -145,24 +155,30 @@ class RiskExposures(tk.Frame):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Risk Exposures", font=LLLARGE_FONT)
         label.place(relx=.50, rely=.0)  
-        
+         
         self.option_stock_price_entry = [None]*len(option_underlyings)
         self.option_greek_entry = [None]*len(option_greeks)
         
         Button_BackHome = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(StartPage))
         Button_BackHome.place(x =50 , y= 10 ) 
         
-        Label(self, text="Enter Underlying Spot Prices:", font=LLARGE_FONT).place(x =400  , y=95)  
+        ValDateLabel = Label(self, text="Date", font=LARGE_FONT).place(x =100  , y=95)  
+        ValDateEntry = ttk.Entry(self)
+        ValDateEntry.place(x =150  , y=95) 
+        ValDateEntry.insert(0,now.strftime("%d-%m-%Y"))
+        
+        Label(self, text="Underlying Spot Prices", font=LLARGE_FONT).place(x =400  , y=95)  
         for i in range(0, len( self.option_stock_price_entry)):
             Label(self, text=option_underlyings[i]).place(x =(700 + i*150) , y=75 ) 
             self.option_stock_price_entry[i] = ttk.Entry(self)
             self.option_stock_price_entry[i].place(x =(675 + i*150) , y=100) 
+            self.option_stock_price_entry[i].insert(0, option_underlyings_price[i])
         
-        Label(self, text="Portfolio Greeks Break Down", font=LLARGE_FONT).place(x =50 , y=250) 
+        Label(self, text="Portfolio Greeks Break Down", font=LLARGE_FONT).place(x =50 , y=200) 
         for i in range(0, len( self.option_greek_entry)):
-            Label(self, text=option_greeks[i]).place(x =50 , y=(300 + i*75)) 
+            Label(self, text=option_greeks[i]).place(x =50 , y=(250 + i*50)) 
             self.option_greek_entry[i] = ttk.Entry(self)
-            self.option_greek_entry[i].place(x =150 , y=(300 + i*75))    
+            self.option_greek_entry[i].place(x =150 , y=(250 + i*50))  
         
                 
 class SurfacePlotter(tk.Frame):
@@ -174,15 +190,10 @@ class SurfacePlotter(tk.Frame):
         
         self.option_entry_list = [None]*len(optionTradeDetailsForPlot)
         
-        self.dropDownDefaultStrBuySell= StringVar(self)
         self.dropDownDefaultStrPlotType = StringVar(self)
         self.dropDownDefaultStrBSModelType= StringVar(self)
-        self.dropDownDefaultStrBuySell.set("Select Buy/Sell")
         self.dropDownDefaultStrPlotType.set("Select Plot Type")
         self.dropDownDefaultStrBSModelType.set("Select BS Model Type")
-        
-        BuySellList = OptionMenu(self, self.dropDownDefaultStrBuySell, * option_BuySell )
-        BuySellList.place(x =250 , y= 100) 
         
         PlotTypeList = OptionMenu(self, self.dropDownDefaultStrPlotType, * plot_types )
         PlotTypeList.place(x =250 , y= 150) 
@@ -190,7 +201,7 @@ class SurfacePlotter(tk.Frame):
         BSModelTypeList = OptionMenu(self, self.dropDownDefaultStrBSModelType, * BS_Model_type )
         BSModelTypeList.place(x =250 , y= 200) 
         
-        Button_PlotCurve = ttk.Button(self, text="Plot Curve",  command=self.plotSurface3DSurface)
+        Button_PlotCurve = ttk.Button(self, text="Refresh Curve",  command=self.plotSurface3DSurface)
         Button_PlotCurve.place(x =100 , y=600) 
         
         Button_BackHome = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(StartPage))
@@ -199,19 +210,28 @@ class SurfacePlotter(tk.Frame):
         for i in range(0, len( self.option_entry_list)):
             Label(self, text=optionTradeDetailsForPlot[i]).place(x =50 , y=(250 + i*50)) 
             self.option_entry_list[i] = ttk.Entry(self)
-            self.option_entry_list[i].place(x =250 , y=(250 + i*50))   
+            self.option_entry_list[i].place(x =250 , y=(250 + i*50)) 
+            self.option_entry_list[i].insert(0,optionTradeDetailsForPlot_initial_values[i])
             
 
     def plotSurface3DSurface(self):
         global BS
+        global ToolBarExists
         BS.setParameters(100, float(self.option_entry_list[0].get()), float(self.option_entry_list[1].get()),
                  float(self.option_entry_list[2].get()),float(self.option_entry_list[3].get()),
                   float(self.option_entry_list[4].get()), self.dropDownDefaultStrBSModelType.get())
-        f = BS.plot3dSurfaceTkinter(self.dropDownDefaultStrPlotType.get())
+        f = plt.figure()
+        f.set_size_inches(14, 9)
         canvas = FigureCanvasTkAgg(f, self)
+        canvas._tkcanvas.place(x =400 , y= 100 ) 
+        f = BS.plot3dSurfaceTkinter(self.dropDownDefaultStrPlotType.get(), f)
+        canvas.get_tk_widget().place(x =400 , y= 100 )
         canvas.show()
-        canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-        canvas._tkcanvas.place(x =400 , y= 100 )       
+        if ToolBarExists == 0.0:
+            toolbar = NavigationToolbar2TkAgg(canvas, self)
+            ToolBarExists = 1.0
+        toolbar.update()
+              
 
         
 app = TradeManager()

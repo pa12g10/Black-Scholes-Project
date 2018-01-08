@@ -13,10 +13,6 @@ from matplotlib import cm
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D 
 
-fig = plt.figure()
-fig.set_size_inches(14, 9)
-sub = fig.add_subplot(1,1,1, projection = "3d")
-
 class BS:
     def __init__(self, stokePrice, strike, timeMat, intRate, divYield, sigma, modelType):
         self.stokePrice = stokePrice
@@ -195,7 +191,8 @@ class BS:
         fig.colorbar(surface, shrink=0.5, aspect=5)
         plt.show()
         
-    def plot3dSurfaceTkinter(self,plotType):
+    def plot3dSurfaceTkinter(self,plotType,f):
+        sub = f.add_subplot(1,1,1, projection = "3d")
         X = np.arange(0,  self.strike*2, 5)
         Y = np.arange(0,  self.timeMat, 0.05)
         X,Y = np.meshgrid(X,Y)
@@ -203,7 +200,10 @@ class BS:
         Z = self.callPlotType(plotType, self)
         sub.clear()
         sub.plot_surface(X,Y,Z)
-        return fig
+        sub.set_xlabel('Stock Price', fontsize=15)
+        sub.set_ylabel('Time Maturity (Years)', fontsize=15)
+        sub.set_zlabel(plotType, fontsize=15)
+        return f
     
     def callPlotType(self, plotType, BS):
         if plotType == 'c_delta':
@@ -236,8 +236,36 @@ class BS:
             Z = BS.DdeltaDvol()
         elif plotType == 'DdeltaDtime':
             Z = BS.DdeltaDtime()
-        return Z      
-  
+        return Z  
+    
+#    def getTotalGreeksForTradeDataBase(self, TradeDataBase):
+#        
+#    
+#    
+#    
+#    def getAllGreeksForTrade(self, TradeDetails):
+#        option_Greeks = [None]*len(TradeDetails)
+#        if TradeDetailsMatrix[2] == 'Call':
+#            option_Greeks[0] = BS.c_delta()
+#            option_Greeks[1] = BS.gamma()
+#            option_Greeks[2] = BS.vega()
+#            option_Greeks[3] = BS.c_theta()
+#            option_Greeks[4] = BS.c_rho()
+#            option_Greeks[5] = BS.c_psi()
+#            option_Greeks[6] = BS.c_carry()
+#            option_Greeks[7] = BS.DdeltaDvol()
+#            option_Greeks[8] = BS.DdeltaDtime()   
+#        elif TradeDetailsMatrix[2] == 'Put':
+#            option_Greeks[0] = BS.p_delta()
+#            option_Greeks[1] = BS.gamma()
+#            option_Greeks[2] = BS.vega()
+#            option_Greeks[3] = BS.p_theta()
+#            option_Greeks[4] = BS.p_rho()
+#            option_Greeks[5] = BS.p_psi()
+#            option_Greeks[6] = BS.p_carry()
+#            option_Greeks[7] = BS.DdeltaDvol()
+#            option_Greeks[8] = BS.DdeltaDtime()
+    
 def N(X):
         return norm.cdf(X)   
     
