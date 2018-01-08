@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Jan  6 18:56:16 2018
-
 @author: Gebruiker
 """
 from BS_Framework import *
@@ -12,11 +11,12 @@ import tkinter as tk
 from tkinter import ttk
 from numpy import *
 import pandas as pd
-from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
+from PIL import Image, ImageTk
 
 
-LARGER_FONT= ("Verdana", 14)
+LLLARGE_FONT= ("Verdana", 14)
+LLARGE_FONT= ("Verdana", 13)
 LARGE_FONT= ("Verdana", 12)
 NORM_FONT= ("Verdana", 10)
 YesNo = 0
@@ -37,4 +37,5 @@ option_trade_economic_title = array(["Contract Size:","Quantity:","Strike:",
 option_underlyings = array(["UKX Index","SPX Index","SX5E Index","NKY Index"])
 optionTradeDetailsForPlot = array(["Strike:","Maturity (Years) :","Interest rate % :","Dividend Yield % :","Sigma % :"])
 option_BuySell = array(["Buy","Sell"])
-option_CallPut = array(["Call","Put"])
+option_CallPut = array(["Call","Put"]) 
+option_greeks = array([ "delta","gammaP", "vega", "theta","rho","psi","carry","DdeltaDvol","DdeltaDtime"])
