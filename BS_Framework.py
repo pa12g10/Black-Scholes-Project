@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Oct 31 18:23:54 2017
-
 @author: Peter Nicholas Allen 
 """
 from math import *
@@ -12,6 +11,10 @@ import numpy as np
 from matplotlib import cm 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D 
+
+fig = plt.figure()
+fig.set_size_inches(14, 9)
+sub = fig.add_subplot(1,1,1, projection = "3d")
 
 class BS:
     def __init__(self, stokePrice, strike, timeMat, intRate, divYield, sigma, modelType):
@@ -35,11 +38,6 @@ class BS:
         self.intRate = intRate
         self.divYield = divYield
         self.sigma = sigma
-        self.newLine = "\n"
-        self.sep = "---------------"
-        self.dayCount = 365.0
-        self.rateScaler = 100.0
-        self.bpScaler = 10000.0
         self.modelType = modelType
                     
     #Full summary
@@ -127,6 +125,9 @@ class BS:
     def vega(self):
         return self.stokePrice*sqrt(self.timeMat)*exp((self.divYield - self.intRate)*self.timeMat)*dN(self.d1()) / 100
     
+    def vegaP(self):
+        return self.sigma / 10 * self.vega()
+    
     def c_theta(self):
         top = - self.sigma*self.stokePrice*exp((self.divYield - self.intRate)*self.timeMat) * dN(self.d1())
         bott = 2.0 * sqrt(self.timeMat)
@@ -191,8 +192,7 @@ class BS:
         fig.colorbar(surface, shrink=0.5, aspect=5)
         plt.show()
         
-    def plot3dSurfaceTkinter(self,plotType,f):
-        sub = f.add_subplot(1,1,1, projection = "3d")
+    def plot3dSurfaceTkinter(self,plotType):
         X = np.arange(0,  self.strike*2, 5)
         Y = np.arange(0,  self.timeMat, 0.05)
         X,Y = np.meshgrid(X,Y)
@@ -200,10 +200,7 @@ class BS:
         Z = self.callPlotType(plotType, self)
         sub.clear()
         sub.plot_surface(X,Y,Z)
-        sub.set_xlabel('Stock Price', fontsize=15)
-        sub.set_ylabel('Time Maturity (Years)', fontsize=15)
-        sub.set_zlabel(plotType, fontsize=15)
-        return f
+        return fig
     
     def callPlotType(self, plotType, BS):
         if plotType == 'c_delta':
@@ -236,36 +233,40 @@ class BS:
             Z = BS.DdeltaDvol()
         elif plotType == 'DdeltaDtime':
             Z = BS.DdeltaDtime()
-        return Z  
+        return Z      
+        
     
-#    def getTotalGreeksForTradeDataBase(self, TradeDataBase):
-#        
-#    
-#    
-#    
-#    def getAllGreeksForTrade(self, TradeDetails):
-#        option_Greeks = [None]*len(TradeDetails)
-#        if TradeDetailsMatrix[2] == 'Call':
-#            option_Greeks[0] = BS.c_delta()
-#            option_Greeks[1] = BS.gamma()
-#            option_Greeks[2] = BS.vega()
-#            option_Greeks[3] = BS.c_theta()
-#            option_Greeks[4] = BS.c_rho()
-#            option_Greeks[5] = BS.c_psi()
-#            option_Greeks[6] = BS.c_carry()
-#            option_Greeks[7] = BS.DdeltaDvol()
-#            option_Greeks[8] = BS.DdeltaDtime()   
-#        elif TradeDetailsMatrix[2] == 'Put':
-#            option_Greeks[0] = BS.p_delta()
-#            option_Greeks[1] = BS.gamma()
-#            option_Greeks[2] = BS.vega()
-#            option_Greeks[3] = BS.p_theta()
-#            option_Greeks[4] = BS.p_rho()
-#            option_Greeks[5] = BS.p_psi()
-#            option_Greeks[6] = BS.p_carry()
-#            option_Greeks[7] = BS.DdeltaDvol()
-#            option_Greeks[8] = BS.DdeltaDtime()
-    
+    def getAllGreeksForTrade(self,TradeDetailsMatrix):
+        option_Greeks = []
+        if TradeDetailsMatrix[3] == 'Call':
+            option_Greeks.append(self.c_delta())
+            option_Greeks.append(self.gammaP())
+            option_Greeks.append(self.vegaP())
+            option_Greeks.append(self.c_theta())
+            option_Greeks.append(self.c_rho())
+            option_Greeks.append(self.c_psi())
+            option_Greeks.append(self.c_carry())
+            option_Greeks.append(self.DdeltaDvol())
+            option_Greeks.append(self.DdeltaDtime())   
+        elif TradeDetailsMatrix[3] == 'Put':
+            option_Greeks.append(self.p_delta())
+            option_Greeks.append(self.gammaP())
+            option_Greeks.append(self.vegaP())
+            option_Greeks.append(self.p_theta())
+            option_Greeks.append(self.p_rho())
+            option_Greeks.append(self.p_psi())
+            option_Greeks.append(self.p_carry())
+            option_Greeks.append(self.DdeltaDvol())
+            option_Greeks.append(self.DdeltaDtime())
+        option_Greeks = asarray(option_Greeks)
+        option_Greeks = self.scaleUpGreekByOptionQunantityAndSize(option_Greeks,TradeDetailsMatrix[4],TradeDetailsMatrix[5])
+        if TradeDetailsMatrix[2] == 'Sell':
+            option_Greeks = -1*option_Greeks
+        return option_Greeks
+        
+    def scaleUpGreekByOptionQunantityAndSize(self,option_Greeks,ContractSize,Quanity):
+        return option_Greeks*ContractSize*Quanity
+  
 def N(X):
         return norm.cdf(X)   
     
@@ -274,4 +275,3 @@ def n(X):
     
 def dN(X):
         return (1/sqrt(2*pi)) * exp(- 0.5 * X * X)
-    
