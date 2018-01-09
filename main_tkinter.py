@@ -6,10 +6,8 @@ Created on Wed Dec 27 10:44:36 2017
 """
 
 from InputParameters import *
+from PortfolioManager import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-
-BS = BS(100, 100, 1,1,1,1,'Espen')
-now = datetime.now()
 
 class TradeManager(tk.Tk):
 
@@ -130,7 +128,7 @@ class TradePositions(tk.Frame):
         return TradeID
     
     def refreshPositionsList(self):
-        TradeDatabase = pd.read_csv('TradeDatabase.csv', sep=';')
+        TradeDatabase = pd.read_csv(DataBaseFileName, sep=';')
         TradeDatabase = TradeDatabase.as_matrix()
         textBox = Text(self, height=25, width=125)
         scrollBar = Scrollbar(self)
@@ -157,28 +155,78 @@ class RiskExposures(tk.Frame):
         label.place(relx=.50, rely=.0)  
          
         self.option_stock_price_entry = [None]*len(option_underlyings)
-        self.option_greek_entry = [None]*len(option_greeks)
+        self.underlying_prices =  [None]*len(option_underlyings)
+        self.option_greek_entry = [None]*(len(option_greeks)*len(option_underlyings_price))
         
         Button_BackHome = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(StartPage))
         Button_BackHome.place(x =50 , y= 10 ) 
         
-        ValDateLabel = Label(self, text="Date", font=LARGE_FONT).place(x =100  , y=95)  
-        ValDateEntry = ttk.Entry(self)
-        ValDateEntry.place(x =150  , y=95) 
-        ValDateEntry.insert(0,now.strftime("%d-%m-%Y"))
+        Button_RefreshGreeks = ttk.Button(self, text="Refresh Greeks",command=self.RefreshGreeks)
+        Button_RefreshGreeks.place(x =150 , y= 150 ) 
         
-        Label(self, text="Underlying Spot Prices", font=LLARGE_FONT).place(x =400  , y=95)  
+        Button_ClearGreeks = ttk.Button(self, text="Clear Greeks",command=self.clearGreeks)
+        Button_ClearGreeks.place(x =150 , y= 250 ) 
+        
+        ValDateLabel = Label(self, text="Date", font=LARGE_FONT).place(x =100  , y=95)  
+        self.ValDateEntry = ttk.Entry(self)
+        self.ValDateEntry.place(x =150  , y=95) 
+        self.ValDateEntry.insert(0,now.strftime("%d-%m-%Y"))
+        
+        Label(self, text="Underlying Spot Prices", font=LLARGE_FONT).place(x =600  , y=80)  
         for i in range(0, len( self.option_stock_price_entry)):
-            Label(self, text=option_underlyings[i]).place(x =(700 + i*150) , y=75 ) 
+            Label(self, text=option_underlyings[i]).place(x =(700 + i*150) , y=125 ) 
             self.option_stock_price_entry[i] = ttk.Entry(self)
-            self.option_stock_price_entry[i].place(x =(675 + i*150) , y=100) 
+            self.option_stock_price_entry[i].place(x =(675 + i*150) , y=150) 
             self.option_stock_price_entry[i].insert(0, option_underlyings_price[i])
         
-        Label(self, text="Portfolio Greeks Break Down", font=LLARGE_FONT).place(x =50 , y=200) 
-        for i in range(0, len( self.option_greek_entry)):
-            Label(self, text=option_greeks[i]).place(x =50 , y=(250 + i*50)) 
-            self.option_greek_entry[i] = ttk.Entry(self)
-            self.option_greek_entry[i].place(x =150 , y=(250 + i*50))  
+        
+        Label(self, text="Portfolio Greeks Break Down", font=LLARGE_FONT).place(x =600 , y=200) 
+        for i in range(0, len(option_greeks)):
+                Label(self, text=option_greeks[i]).place(x =600 , y=(250 + i*50)) 
+        a = 0
+        for j in range(0, len(option_underlyings_price)):         
+            for i in range(0, len(option_greeks)):
+                self.option_greek_entry[a] = ttk.Entry(self)
+                self.option_greek_entry[a].place(x =(675 + 150*j) , y=(250 + i*50))         
+                a += 1
+            
+    def RefreshGreeks(self):
+        global ManagePortfolio
+        global PortfolioManagerClassOnOff
+        TradeDatabase = pd.read_csv(DataBaseFileName, sep=';')
+        TradeDatabase = TradeDatabase.as_matrix()
+        valDate = datetime.strptime(self.ValDateEntry.get(), "%d-%m-%Y")
+        underlying_prices = self.getUnderlyingPrices()
+        if PortfolioManagerClassOnOff == 0.0:
+            ManagePortfolio = ManagePortfolio(TradeDatabase,option_underlyings,self.underlying_prices,valDate,BS_Model_type[0])
+            PortfolioManagerClassOnOff = 1.0
+        ManagePortfolio.setParameters(TradeDatabase,option_underlyings,self.underlying_prices,valDate,BS_Model_type[0])
+        ManagePortfolio.SeperateTradeBlockByUnderlyingAndGetTradeGreeks()
+        GreekMatrix = ManagePortfolio.SumGreeksForEachUnderlying()
+        self.fillOption_greek_entry_boxes(GreekMatrix)
+        print(Matrix)
+    
+    
+    def getUnderlyingPrices(self):
+        for i in range(0, len( self.option_stock_price_entry)):
+            self.underlying_prices[i] = float(self.option_stock_price_entry[i].get())
+    
+    def clearGreeks(self):
+        a = 0
+        for j in range(0, len(option_underlyings_price)):         
+            for i in range(0, len(option_greeks)):
+                self.option_greek_entry[a].delete(0, 'end')        
+                a += 1
+
+    
+    def fillOption_greek_entry_boxes(self, GreekMatrix):
+        a = 0
+        for j in range(0, len(option_underlyings_price)):         
+            for i in range(0, len(option_greeks)):
+                self.option_greek_entry[a].delete(0, 'end')
+                self.option_greek_entry[a].insert(0,GreekMatrix[j][i])         
+                a += 1
+        
         
                 
 class SurfacePlotter(tk.Frame):
@@ -215,16 +263,16 @@ class SurfacePlotter(tk.Frame):
             
 
     def plotSurface3DSurface(self):
-        global BS
+        global BS_1
         global ToolBarExists
-        BS.setParameters(100, float(self.option_entry_list[0].get()), float(self.option_entry_list[1].get()),
+        BS_1.setParameters(100, float(self.option_entry_list[0].get()), float(self.option_entry_list[1].get()),
                  float(self.option_entry_list[2].get()),float(self.option_entry_list[3].get()),
                   float(self.option_entry_list[4].get()), self.dropDownDefaultStrBSModelType.get())
         f = plt.figure()
         f.set_size_inches(14, 9)
         canvas = FigureCanvasTkAgg(f, self)
         canvas._tkcanvas.place(x =400 , y= 100 ) 
-        f = BS.plot3dSurfaceTkinter(self.dropDownDefaultStrPlotType.get(), f)
+        f = BS_1.plot3dSurfaceTkinter(self.dropDownDefaultStrPlotType.get(), f)
         canvas.get_tk_widget().place(x =400 , y= 100 )
         canvas.show()
         if ToolBarExists == 0.0:

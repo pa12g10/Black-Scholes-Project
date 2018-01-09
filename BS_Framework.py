@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Oct 31 18:23:54 2017
-
 @author: Peter Nicholas Allen 
 """
 from math import *
@@ -35,11 +34,6 @@ class BS:
         self.intRate = intRate
         self.divYield = divYield
         self.sigma = sigma
-        self.newLine = "\n"
-        self.sep = "---------------"
-        self.dayCount = 365.0
-        self.rateScaler = 100.0
-        self.bpScaler = 10000.0
         self.modelType = modelType
                     
     #Full summary
@@ -126,6 +120,9 @@ class BS:
     
     def vega(self):
         return self.stokePrice*sqrt(self.timeMat)*exp((self.divYield - self.intRate)*self.timeMat)*dN(self.d1()) / 100
+    
+    def vegaP(self):
+        return self.sigma / 10 * self.vega()
     
     def c_theta(self):
         top = - self.sigma*self.stokePrice*exp((self.divYield - self.intRate)*self.timeMat) * dN(self.d1())
@@ -216,6 +213,8 @@ class BS:
             Z =  BS.gammaP()
         elif plotType == 'vega':
             Z =  BS.vega()
+        elif plotType == 'vegaP':
+            Z =  BS.vegaP()
         elif plotType == 'c_theta':
             Z =  BS.c_theta()
         elif plotType == 'p_theta':
@@ -236,36 +235,40 @@ class BS:
             Z = BS.DdeltaDvol()
         elif plotType == 'DdeltaDtime':
             Z = BS.DdeltaDtime()
-        return Z  
+        return Z      
+        
     
-#    def getTotalGreeksForTradeDataBase(self, TradeDataBase):
-#        
-#    
-#    
-#    
-#    def getAllGreeksForTrade(self, TradeDetails):
-#        option_Greeks = [None]*len(TradeDetails)
-#        if TradeDetailsMatrix[2] == 'Call':
-#            option_Greeks[0] = BS.c_delta()
-#            option_Greeks[1] = BS.gamma()
-#            option_Greeks[2] = BS.vega()
-#            option_Greeks[3] = BS.c_theta()
-#            option_Greeks[4] = BS.c_rho()
-#            option_Greeks[5] = BS.c_psi()
-#            option_Greeks[6] = BS.c_carry()
-#            option_Greeks[7] = BS.DdeltaDvol()
-#            option_Greeks[8] = BS.DdeltaDtime()   
-#        elif TradeDetailsMatrix[2] == 'Put':
-#            option_Greeks[0] = BS.p_delta()
-#            option_Greeks[1] = BS.gamma()
-#            option_Greeks[2] = BS.vega()
-#            option_Greeks[3] = BS.p_theta()
-#            option_Greeks[4] = BS.p_rho()
-#            option_Greeks[5] = BS.p_psi()
-#            option_Greeks[6] = BS.p_carry()
-#            option_Greeks[7] = BS.DdeltaDvol()
-#            option_Greeks[8] = BS.DdeltaDtime()
-    
+    def getAllGreeksForTrade(self,TradeDetailsMatrix):
+        option_Greeks = []
+        if TradeDetailsMatrix[3] == 'Call':
+            option_Greeks.append(self.c_delta())
+            option_Greeks.append(self.gammaP())
+            option_Greeks.append(self.vegaP())
+            option_Greeks.append(self.c_theta())
+            option_Greeks.append(self.c_rho())
+            option_Greeks.append(self.c_psi())
+            option_Greeks.append(self.c_carry())
+            option_Greeks.append(self.DdeltaDvol())
+            option_Greeks.append(self.DdeltaDtime())   
+        elif TradeDetailsMatrix[3] == 'Put':
+            option_Greeks.append(self.p_delta())
+            option_Greeks.append(self.gammaP())
+            option_Greeks.append(self.vegaP())
+            option_Greeks.append(self.p_theta())
+            option_Greeks.append(self.p_rho())
+            option_Greeks.append(self.p_psi())
+            option_Greeks.append(self.p_carry())
+            option_Greeks.append(self.DdeltaDvol())
+            option_Greeks.append(self.DdeltaDtime())
+        option_Greeks = asarray(option_Greeks)
+        option_Greeks = self.scaleUpGreekByOptionQunantityAndSize(option_Greeks,TradeDetailsMatrix[4],TradeDetailsMatrix[5])
+        if TradeDetailsMatrix[2] == 'Sell':
+            option_Greeks = -1*option_Greeks
+        return option_Greeks
+        
+    def scaleUpGreekByOptionQunantityAndSize(self,option_Greeks,ContractSize,Quanity):
+        return option_Greeks*ContractSize*Quanity
+  
 def N(X):
         return norm.cdf(X)   
     
@@ -274,4 +277,3 @@ def n(X):
     
 def dN(X):
         return (1/sqrt(2*pi)) * exp(- 0.5 * X * X)
-    
