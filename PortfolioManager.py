@@ -11,7 +11,7 @@ from InputParameters import *
 
 yearCnt = 365
 
-BS_2 = BS(100, 100, 1,1,1,1,'Espen')
+BS_Class_2 = BS(100, 100, 1,1,1,1,'Espen')
 
 def timeBetweenTwoDatesInYears(valDate, MatDate):
     Mat = datetime.strptime(MatDate, "%d-%m-%Y")
@@ -60,28 +60,28 @@ class ManagePortfolio:
         self.reset()
         
     def SeperateTradeBlockByUnderlyingAndGetTradeGreeks(self):
-        global BS_2
+        global BS_Class_2
         for y in range(0, len(self.TradeBlock)):
             if self.TradeBlock[y][1] == self.option_underlyings[0]:
                 self.FtseTrades.append(self.TradeBlock[y])                
-                BS_2.setParameters(self.underlying_prices[0], self.TradeBlock[y][6], timeBetweenTwoDatesInYears(self.valDate,self.TradeBlock[y][8]),
+                BS_Class_2.setParameters(self.underlying_prices[0], self.TradeBlock[y][6], timeBetweenTwoDatesInYears(self.valDate,self.TradeBlock[y][8]),
                                  self.TradeBlock[y][9],self.TradeBlock[y][10], self.TradeBlock[y][11], self.modelType)
-                self.FtseTrades_greeks.append(BS_2.getAllGreeksForTrade(self.TradeBlock[y]))
+                self.FtseTrades_greeks.append(BS_Class_2.getAllGreeksForTrade(self.TradeBlock[y]))
             elif self.TradeBlock[y][1] == self.option_underlyings[1]:
                 self.SnPTrades.append(self.TradeBlock[y])                
-                BS_2.setParameters(self.underlying_prices[1], self.TradeBlock[y][6], timeBetweenTwoDatesInYears(self.valDate,self.TradeBlock[y][8]),
+                BS_Class_2.setParameters(self.underlying_prices[1], self.TradeBlock[y][6], timeBetweenTwoDatesInYears(self.valDate,self.TradeBlock[y][8]),
                                  self.TradeBlock[y][9],self.TradeBlock[y][10], self.TradeBlock[y][11], self.modelType)
-                self.SnPTrades_greeks.append(BS_2.getAllGreeksForTrade(self.TradeBlock[y]))
+                self.SnPTrades_greeks.append(BS_Class_2.getAllGreeksForTrade(self.TradeBlock[y]))
             elif self.TradeBlock[y][1] == self.option_underlyings[2]:
                 self.EuroTrades.append(self.TradeBlock[y])                
-                BS_2.setParameters(self.underlying_prices[2], self.TradeBlock[y][6], timeBetweenTwoDatesInYears(self.valDate,self.TradeBlock[y][8]),
+                BS_Class_2.setParameters(self.underlying_prices[2], self.TradeBlock[y][6], timeBetweenTwoDatesInYears(self.valDate,self.TradeBlock[y][8]),
                                  self.TradeBlock[y][9],self.TradeBlock[y][10], self.TradeBlock[y][11], self.modelType)
-                self.EuroTrades_greeks.append(BS_2.getAllGreeksForTrade(self.TradeBlock[y]))
+                self.EuroTrades_greeks.append(BS_Class_2.getAllGreeksForTrade(self.TradeBlock[y]))
             elif self.TradeBlock[y][1] == self.option_underlyings[3]:
                 self.NikkiTrades.append(self.TradeBlock[y])
-                BS_2.setParameters(self.underlying_prices[3], self.TradeBlock[y][6], timeBetweenTwoDatesInYears(self.valDate,self.TradeBlock[y][8]),
+                BS_Class_2.setParameters(self.underlying_prices[3], self.TradeBlock[y][6], timeBetweenTwoDatesInYears(self.valDate,self.TradeBlock[y][8]),
                                  self.TradeBlock[y][9],self.TradeBlock[y][10], self.TradeBlock[y][11], self.modelType)
-                self.NikkiTrades_greeks.append(BS_2.getAllGreeksForTrade(self.TradeBlock[y]))
+                self.NikkiTrades_greeks.append(BS_Class_2.getAllGreeksForTrade(self.TradeBlock[y]))
         self.setOptionGreekListsToArrays()
         
     

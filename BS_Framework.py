@@ -12,6 +12,10 @@ from matplotlib import cm
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D 
 
+fig = plt.figure()
+fig.set_size_inches(14, 9)
+sub = fig.add_subplot(1,1,1, projection = "3d")
+
 class BS:
     def __init__(self, stokePrice, strike, timeMat, intRate, divYield, sigma, modelType):
         self.stokePrice = stokePrice
@@ -188,8 +192,7 @@ class BS:
         fig.colorbar(surface, shrink=0.5, aspect=5)
         plt.show()
         
-    def plot3dSurfaceTkinter(self,plotType,f):
-        sub = f.add_subplot(1,1,1, projection = "3d")
+    def plot3dSurfaceTkinter(self,plotType):
         X = np.arange(0,  self.strike*2, 5)
         Y = np.arange(0,  self.timeMat, 0.05)
         X,Y = np.meshgrid(X,Y)
@@ -197,10 +200,7 @@ class BS:
         Z = self.callPlotType(plotType, self)
         sub.clear()
         sub.plot_surface(X,Y,Z)
-        sub.set_xlabel('Stock Price', fontsize=15)
-        sub.set_ylabel('Time Maturity (Years)', fontsize=15)
-        sub.set_zlabel(plotType, fontsize=15)
-        return f
+        return fig
     
     def callPlotType(self, plotType, BS):
         if plotType == 'c_delta':

@@ -11,8 +11,8 @@ scaler = 100
 O = BS(100, 100, 1.0, 0.05, 0.02,0.2,'Espen')
 D = BS(90, 100, 1.0, 0.05, 0.02,0.2,'Espen')
 
-def startUnitTest():
-    unittest.main()
+
+
 
 class MyTest(unittest.TestCase):
     def test_N(self): 
@@ -39,6 +39,8 @@ class MyTest(unittest.TestCase):
         self.assertEqual(round(O.gammaP(),3),0.019)
     def test_vega(self):
         self.assertEqual(round(O.vega(),4),0.3795)
+    def test_vegaP(self):
+        self.assertEqual(round(O.vegaP(),5),0.00759)
     def test_c_theta(self):
         self.assertEqual(round(O.c_theta(),4),-0.0123)
     def test_p_theta(self):
@@ -63,3 +65,6 @@ class MyTest(unittest.TestCase):
     def test_deltaNeutralStrike(self):
         self.assertEqual(round(O.deltaNeutralStrike(),4),108.3287)
     
+unittest.main()
+def startUnitTest():
+    unittest.main()

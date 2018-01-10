@@ -22,13 +22,13 @@ NORM_FONT= ("Verdana", 10)
 
 now = datetime.now()
 
-BS_1 = BS(100, 100, 1,1,1,1,'Espen')
+BS_Class_1 = BS(100, 100, 1,1,1,1,'Espen')
 
 ToolBarExists = 0.0
 
 PortfolioManagerClassOnOff = 0.0
 
-YesNo = 0
+NumDigitsRound = 3
 
 VersionNumber = ' v1.01'
 
@@ -43,7 +43,7 @@ BS_Model_type = array(['Espen','Norm'])
 option_trade_economic_title = array(["Contract Size:","Quantity:","Strike:",
                                           "Start Date (dd-mm-yyyy):","Maturity (dd-mm-yyyy):",
                                           "Interest rate % :","Dividend Yield % :", "sigma :"])
-option_entry_list_BookTrade = array([10,10,100,"10-01-2018","12-03-2018",0.05,0.02,0.2])
+EntryBox_Default_Option_Parameters = array([10,10,100,"10-01-2018","12-03-2018",0.05,0.02,0.2])
 option_underlyings = array(["UKX Index","SPX Index","SX5E Index","NKY Index"])
 option_underlyings_price = array([100,100,100,100])
 #option_underlyings_price = array([7696.51,2747.39,3618.00,23714.53])

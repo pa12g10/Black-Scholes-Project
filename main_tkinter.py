@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Dec 27 10:44:36 2017
-
 @author: peallen
 """
 
@@ -36,31 +35,20 @@ class TradeManager(tk.Tk):
 
         
 class StartPage(tk.Frame):
-
     def __init__(self, parent, controller):
         tk.Frame.__init__(self,parent)
         label = tk.Label(self, text=("Equity Option Tool Manager"), font=LLLARGE_FONT)
         label.place(relx=.4, rely=.10) 
         
-        image = Image.open(photoName)
-        image = image.resize((350,350))
-        photo = ImageTk.PhotoImage(image)
-        label = tk.Label(self,image=photo)
-        label.image = photo # keep a reference!
-        label.place(relx=.10, rely=.25)
-
         Button_TradePositions = ttk.Button(self, text="Trade Positions", command=lambda: controller.show_frame(TradePositions))
-        Button_TradePositions.place(relx=.50, rely=.30) 
-        
         Button_RiskPositions = ttk.Button(self, text="Risk Exposures" , command=lambda: controller.show_frame(RiskExposures))
-        Button_RiskPositions.place(relx=.50, rely=.45)  
-        
         Button_SurfacePlotter = ttk.Button(self, text="Surface Plotter" , command=lambda: controller.show_frame(SurfacePlotter))
+        Button_TradePositions.place(relx=.50, rely=.30) 
+        Button_RiskPositions.place(relx=.50, rely=.45)  
         Button_SurfacePlotter.place(relx=.50, rely=.60)  
 
 
-class TradePositions(tk.Frame):
-            
+class TradePositions(tk.Frame):           
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Trade Positions", font=LLLARGE_FONT)
@@ -72,41 +60,29 @@ class TradePositions(tk.Frame):
         self.dropDownDefaultStrUnderlying.set("Select Underlying Index")
         self.dropDownDefaultStrBuySell.set("Select Buy/Sell")
         self.dropDownDefaultStrCallPut.set("Select Put/Call")
-        
-        self.option_entry_list = [None]*len(option_trade_economic_title)
-        
+        self.EntryBox_List_Option_Economics = [None]*len(option_trade_economic_title)
 
-        underlyingList = OptionMenu(self, self.dropDownDefaultStrUnderlying, * option_underlyings )
-        underlyingList.place(x =250 , y= 50 ) 
-        
-        BuySellList = OptionMenu(self, self.dropDownDefaultStrBuySell, * option_BuySell )
-        BuySellList.place(x =250 , y= 100) 
-        
-        CallPutList = OptionMenu(self, self.dropDownDefaultStrCallPut, * option_CallPut )
-        CallPutList.place(x =250 , y= 150) 
+        OptionMenu_underlying = OptionMenu(self, self.dropDownDefaultStrUnderlying, * option_underlyings )
+        OptionMenu_BuySell = OptionMenu(self, self.dropDownDefaultStrBuySell, * option_BuySell )
+        OptionMenu_CallPut = OptionMenu(self, self.dropDownDefaultStrCallPut, * option_CallPut )
+        OptionMenu_underlying.place(x =250 , y= 50 ) 
+        OptionMenu_BuySell.place(x =250 , y= 100) 
+        OptionMenu_CallPut.place(x =250 , y= 150)
         
         Button_BackHome = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(StartPage))
-        Button_BackHome.place(x =50 , y= 10 ) 
-        
         Button_BookTrade = ttk.Button(self, text="Book Trade",  command=self.BookTrade)
-        Button_BookTrade.place(x =100 , y=600) 
-        
         Button_ClearTrade = ttk.Button(self, text="Clear Trade Details", command=self.ClearTradeDetails)
-        Button_ClearTrade.place(x =200 , y=600)
-        
         Button_ClearTrade = ttk.Button(self, text="Refresh Positions", command=self.refreshPositionsList)
+        Button_BackHome.place(x =50 , y= 10 ) 
+        Button_BookTrade.place(x =100 , y=600) 
+        Button_ClearTrade.place(x =200 , y=600)
         Button_ClearTrade.place(x =500 , y=50)
         
-        
-        for i in range(0, len( self.option_entry_list)):
+        for i in range(0, len( self.EntryBox_List_Option_Economics)):
             Label(self, text=option_trade_economic_title[i]).place(x =50 , y=(200 + i*50)) 
-            self.option_entry_list[i] = ttk.Entry(self)
-            self.option_entry_list[i].place(x =250 , y=(200 + i*50)) 
-            self.option_entry_list[i].insert(0, option_entry_list_BookTrade[i])
-    
-    def ClearTradeDetails(self):
-        for i in range(0, len(self.option_entry_list)):
-            self.option_entry_list[i].delete(0, 'end')
+            self.EntryBox_List_Option_Economics[i] = ttk.Entry(self)
+            self.EntryBox_List_Option_Economics[i].place(x =250 , y=(200 + i*50)) 
+            self.EntryBox_List_Option_Economics[i].insert(0, EntryBox_Default_Option_Parameters[i])
     
     def BookTrade(self):
         NewTradeID = self.getNewTradeID()
@@ -115,8 +91,8 @@ class TradePositions(tk.Frame):
             TradeDatabase.write(self.dropDownDefaultStrUnderlying.get() + ';')
             TradeDatabase.write(self.dropDownDefaultStrBuySell.get() + ';')
             TradeDatabase.write(self.dropDownDefaultStrCallPut.get() + ';')           
-            for i in range(0, len(self.option_entry_list)):
-                TradeDatabase.write(self.option_entry_list[i].get() + ';')
+            for i in range(0, len(self.EntryBox_List_Option_Economics)):
+                TradeDatabase.write(self.EntryBox_List_Option_Economics[i].get() + ';')
             TradeDatabase.write(str(now.strftime("%d-%m-%Y"))) 
             TradeDatabase.write('\n')             
             TradeDatabase.close()
@@ -127,8 +103,12 @@ class TradePositions(tk.Frame):
         TradeDatabase.close()
         return TradeID
     
+    def ClearTradeDetails(self):
+        for i in range(0, len(self.EntryBox_List_Option_Economics)):
+            self.EntryBox_List_Option_Economics[i].delete(0, 'end')  
+            
     def refreshPositionsList(self):
-        TradeDatabase = pd.read_csv(DataBaseFileName, sep=';')
+        TradeDatabase = pd.read_csv(DataBaseFileName, sep=';', header = 0)
         TradeDatabase = TradeDatabase.as_matrix()
         textBox = Text(self, height=25, width=125)
         scrollBar = Scrollbar(self)
@@ -145,8 +125,6 @@ class TradePositions(tk.Frame):
         textBox.place(x =500 , y=100)
         textBox.config(state=DISABLED)
                 
-    
-            
 class RiskExposures(tk.Frame):
 
     def __init__(self, parent, controller):
@@ -154,31 +132,28 @@ class RiskExposures(tk.Frame):
         label = tk.Label(self, text="Risk Exposures", font=LLLARGE_FONT)
         label.place(relx=.50, rely=.0)  
          
-        self.option_stock_price_entry = [None]*len(option_underlyings)
+        self.EntryBox_Underlying_Price = [None]*len(option_underlyings)
         self.underlying_prices =  [None]*len(option_underlyings)
         self.option_greek_entry = [None]*(len(option_greeks)*len(option_underlyings_price))
         
         Button_BackHome = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(StartPage))
-        Button_BackHome.place(x =50 , y= 10 ) 
-        
         Button_RefreshGreeks = ttk.Button(self, text="Refresh Greeks",command=self.RefreshGreeks)
-        Button_RefreshGreeks.place(x =150 , y= 150 ) 
-        
         Button_ClearGreeks = ttk.Button(self, text="Clear Greeks",command=self.clearGreeks)
-        Button_ClearGreeks.place(x =150 , y= 250 ) 
-        
-        ValDateLabel = Label(self, text="Date", font=LARGE_FONT).place(x =100  , y=95)  
+        Button_BackHome.place(x =50 , y= 10 ) 
+        Button_RefreshGreeks.place(x =150 , y= 150 ) 
+        Button_ClearGreeks.place(x =150 , y= 250 )
+
+        ValDateLabel = Label(self, text="Valuation Date", font=LARGE_FONT).place(x =100  , y=95)  
         self.ValDateEntry = ttk.Entry(self)
         self.ValDateEntry.place(x =150  , y=95) 
         self.ValDateEntry.insert(0,now.strftime("%d-%m-%Y"))
         
         Label(self, text="Underlying Spot Prices", font=LLARGE_FONT).place(x =600  , y=80)  
-        for i in range(0, len( self.option_stock_price_entry)):
+        for i in range(0, len( self.EntryBox_Underlying_Price)):
             Label(self, text=option_underlyings[i]).place(x =(700 + i*150) , y=125 ) 
-            self.option_stock_price_entry[i] = ttk.Entry(self)
-            self.option_stock_price_entry[i].place(x =(675 + i*150) , y=150) 
-            self.option_stock_price_entry[i].insert(0, option_underlyings_price[i])
-        
+            self.EntryBox_Underlying_Price[i] = ttk.Entry(self)
+            self.EntryBox_Underlying_Price[i].place(x =(675 + i*150) , y=150) 
+            self.EntryBox_Underlying_Price[i].insert(0, option_underlyings_price[i])
         
         Label(self, text="Portfolio Greeks Break Down", font=LLARGE_FONT).place(x =600 , y=200) 
         for i in range(0, len(option_greeks)):
@@ -202,14 +177,12 @@ class RiskExposures(tk.Frame):
             PortfolioManagerClassOnOff = 1.0
         ManagePortfolio.setParameters(TradeDatabase,option_underlyings,self.underlying_prices,valDate,BS_Model_type[0])
         ManagePortfolio.SeperateTradeBlockByUnderlyingAndGetTradeGreeks()
-        GreekMatrix = ManagePortfolio.SumGreeksForEachUnderlying()
-        self.fillOption_greek_entry_boxes(GreekMatrix)
-        print(Matrix)
-    
+        SummaryGreekMatrix = ManagePortfolio.SumGreeksForEachUnderlying()
+        self.fillOption_greek_entry_boxes(SummaryGreekMatrix)    
     
     def getUnderlyingPrices(self):
-        for i in range(0, len( self.option_stock_price_entry)):
-            self.underlying_prices[i] = float(self.option_stock_price_entry[i].get())
+        for i in range(0, len( self.EntryBox_Underlying_Price)):
+            self.underlying_prices[i] = float(self.EntryBox_Underlying_Price[i].get())
     
     def clearGreeks(self):
         a = 0
@@ -217,62 +190,54 @@ class RiskExposures(tk.Frame):
             for i in range(0, len(option_greeks)):
                 self.option_greek_entry[a].delete(0, 'end')        
                 a += 1
-
     
     def fillOption_greek_entry_boxes(self, GreekMatrix):
         a = 0
         for j in range(0, len(option_underlyings_price)):         
             for i in range(0, len(option_greeks)):
                 self.option_greek_entry[a].delete(0, 'end')
-                self.option_greek_entry[a].insert(0,GreekMatrix[j][i])         
+                self.option_greek_entry[a].insert(0,round(GreekMatrix[j][i],NumDigitsRound)) 
                 a += 1
-        
-        
                 
 class SurfacePlotter(tk.Frame):
-
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = tk.Label(self, text="Surface Plotter", font=LLLARGE_FONT)
         label.place(relx=.50, rely=.0)  
         
-        self.option_entry_list = [None]*len(optionTradeDetailsForPlot)
-        
+        self.EntryBox_List_Option_Economics = [None]*len(optionTradeDetailsForPlot)
         self.dropDownDefaultStrPlotType = StringVar(self)
         self.dropDownDefaultStrBSModelType= StringVar(self)
         self.dropDownDefaultStrPlotType.set("Select Plot Type")
         self.dropDownDefaultStrBSModelType.set("Select BS Model Type")
         
-        PlotTypeList = OptionMenu(self, self.dropDownDefaultStrPlotType, * plot_types )
-        PlotTypeList.place(x =250 , y= 150) 
-        
-        BSModelTypeList = OptionMenu(self, self.dropDownDefaultStrBSModelType, * BS_Model_type )
-        BSModelTypeList.place(x =250 , y= 200) 
+        OptionMenu_PlotType = OptionMenu(self, self.dropDownDefaultStrPlotType, * plot_types )
+        OptionMenu_BSModelType = OptionMenu(self, self.dropDownDefaultStrBSModelType, * BS_Model_type ) 
+        OptionMenu_PlotType.place(x =250 , y= 150) 
+        OptionMenu_BSModelType.place(x =250 , y= 200)
         
         Button_PlotCurve = ttk.Button(self, text="Refresh Curve",  command=self.plotSurface3DSurface)
+        Button_BackHome = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(StartPage)) 
         Button_PlotCurve.place(x =100 , y=600) 
+        Button_BackHome.place(x =50 , y= 10 )        
         
-        Button_BackHome = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(StartPage))
-        Button_BackHome.place(x =50 , y= 10 ) 
-        
-        for i in range(0, len( self.option_entry_list)):
+        for i in range(0, len( self.EntryBox_List_Option_Economics)):
             Label(self, text=optionTradeDetailsForPlot[i]).place(x =50 , y=(250 + i*50)) 
-            self.option_entry_list[i] = ttk.Entry(self)
-            self.option_entry_list[i].place(x =250 , y=(250 + i*50)) 
-            self.option_entry_list[i].insert(0,optionTradeDetailsForPlot_initial_values[i])
+            self.EntryBox_List_Option_Economics[i] = ttk.Entry(self)
+            self.EntryBox_List_Option_Economics[i].place(x =250 , y=(250 + i*50)) 
+            self.EntryBox_List_Option_Economics[i].insert(0,optionTradeDetailsForPlot_initial_values[i])
             
-
     def plotSurface3DSurface(self):
-        global BS_1
+        global BS_Class_1
         global ToolBarExists
-        BS_1.setParameters(100, float(self.option_entry_list[0].get()), float(self.option_entry_list[1].get()),
-                 float(self.option_entry_list[2].get()),float(self.option_entry_list[3].get()),
-                  float(self.option_entry_list[4].get()), self.dropDownDefaultStrBSModelType.get())
+        BS_Class_1.setParameters(100, float(self.EntryBox_List_Option_Economics[0].get()), float(self.EntryBox_List_Option_Economics[1].get()),
+                 float(self.EntryBox_List_Option_Economics[2].get()),float(self.EntryBox_List_Option_Economics[3].get()),
+                  float(self.EntryBox_List_Option_Economics[4].get()), self.dropDownDefaultStrBSModelType.get())
         f = plt.figure()
         f.set_size_inches(14, 9)
         canvas = FigureCanvasTkAgg(f, self)
         canvas._tkcanvas.place(x =400 , y= 100 ) 
-        f = BS_1.plot3dSurfaceTkinter(self.dropDownDefaultStrPlotType.get(), f)
+        f = BS_Class_1.plot3dSurfaceTkinter(self.dropDownDefaultStrPlotType.get(), f)
         canvas.get_tk_widget().place(x =400 , y= 100 )
         canvas.show()
         if ToolBarExists == 0.0:
@@ -280,8 +245,6 @@ class SurfacePlotter(tk.Frame):
             ToolBarExists = 1.0
         toolbar.update()
               
-
-        
 app = TradeManager()
 app.geometry("850x650+350+350")
 app.mainloop()
