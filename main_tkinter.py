@@ -12,7 +12,6 @@ class TradeManager(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        #tk.Tk.iconbitmap(self, default="clienticon.ico")
         tk.Tk.wm_title(self, "Trade Manager"+ VersionNumber)
 
         container = tk.Frame(self)
@@ -39,6 +38,16 @@ class StartPage(tk.Frame):
         tk.Frame.__init__(self,parent)
         label = tk.Label(self, text=("Equity Option Tool Manager"), font=LLLARGE_FONT)
         label.place(relx=.4, rely=.10) 
+        
+        image = Image.open(photoName)
+        image = image.resize((350,350))
+        photo = ImageTk.PhotoImage(image)
+        label1 = tk.Label(self,image=photo)
+        label1.image = photo # keep a reference!
+        label2 = tk.Label(self,image=photo)
+        label2.image = photo # keep a reference!
+        label1.place(relx=.10, rely=.25)
+        label2.place(relx=.70, rely=.25)
         
         Button_TradePositions = ttk.Button(self, text="Trade Positions", command=lambda: controller.show_frame(TradePositions))
         Button_RiskPositions = ttk.Button(self, text="Risk Exposures" , command=lambda: controller.show_frame(RiskExposures))
@@ -96,6 +105,7 @@ class TradePositions(tk.Frame):
             TradeDatabase.write(str(now.strftime("%d-%m-%Y"))) 
             TradeDatabase.write('\n')             
             TradeDatabase.close()
+        self.refreshPositionsList()
     
     def getNewTradeID(self):
         with open(DataBaseFileName) as TradeDatabase:
@@ -133,6 +143,7 @@ class RiskExposures(tk.Frame):
         label.place(relx=.50, rely=.0)  
          
         self.EntryBox_Underlying_Price = [None]*len(option_underlyings)
+        self.EntryBox_Port_Pos_MVs = [None]*len(option_underlyings)
         self.underlying_prices =  [None]*len(option_underlyings)
         self.option_greek_entry = [None]*(len(option_greeks)*len(option_underlyings_price))
         
@@ -140,12 +151,12 @@ class RiskExposures(tk.Frame):
         Button_RefreshGreeks = ttk.Button(self, text="Refresh Greeks",command=self.RefreshGreeks)
         Button_ClearGreeks = ttk.Button(self, text="Clear Greeks",command=self.clearGreeks)
         Button_BackHome.place(x =50 , y= 10 ) 
-        Button_RefreshGreeks.place(x =150 , y= 150 ) 
-        Button_ClearGreeks.place(x =150 , y= 250 )
+        Button_RefreshGreeks.place(x =450 , y= 150 ) 
+        Button_ClearGreeks.place(x =450, y= 200)
 
-        ValDateLabel = Label(self, text="Valuation Date", font=LARGE_FONT).place(x =100  , y=95)  
+        ValDateLabel = Label(self, text="Valuation Date", font=LARGE_FONT).place(x =75  , y=70)  
         self.ValDateEntry = ttk.Entry(self)
-        self.ValDateEntry.place(x =150  , y=95) 
+        self.ValDateEntry.place(x =75  , y=95) 
         self.ValDateEntry.insert(0,now.strftime("%d-%m-%Y"))
         
         Label(self, text="Underlying Spot Prices", font=LLARGE_FONT).place(x =600  , y=80)  
@@ -164,6 +175,11 @@ class RiskExposures(tk.Frame):
                 self.option_greek_entry[a] = ttk.Entry(self)
                 self.option_greek_entry[a].place(x =(675 + 150*j) , y=(250 + i*50))         
                 a += 1
+        
+        Label(self, text="Position Value", font=LARGE_FONT).place(x =500  , y=725)  
+        for i in range(0, len( self.EntryBox_Port_Pos_MVs)):
+            self.EntryBox_Port_Pos_MVs[i] = ttk.Entry(self)
+            self.EntryBox_Port_Pos_MVs[i].place(x =(675 + i*150) , y=725) 
             
     def RefreshGreeks(self):
         global ManagePortfolio
@@ -178,8 +194,10 @@ class RiskExposures(tk.Frame):
         ManagePortfolio.setParameters(TradeDatabase,option_underlyings,self.underlying_prices,valDate,BS_Model_type[0])
         ManagePortfolio.SeperateTradeBlockByUnderlyingAndGetTradeGreeks()
         SummaryGreekMatrix = ManagePortfolio.SumGreeksForEachUnderlying()
+        PortOptionMVs = ManagePortfolio.SumOptionMVsForEachUnderlying()
         self.fillOption_greek_entry_boxes(SummaryGreekMatrix)    
-    
+        self.fillPortMVs(PortOptionMVs)
+        
     def getUnderlyingPrices(self):
         for i in range(0, len( self.EntryBox_Underlying_Price)):
             self.underlying_prices[i] = float(self.EntryBox_Underlying_Price[i].get())
@@ -190,6 +208,8 @@ class RiskExposures(tk.Frame):
             for i in range(0, len(option_greeks)):
                 self.option_greek_entry[a].delete(0, 'end')        
                 a += 1
+        for j in range(0,len(self.EntryBox_Port_Pos_MVs)):
+            self.EntryBox_Port_Pos_MVs[j].delete(0, 'end')
     
     def fillOption_greek_entry_boxes(self, GreekMatrix):
         a = 0
@@ -198,6 +218,11 @@ class RiskExposures(tk.Frame):
                 self.option_greek_entry[a].delete(0, 'end')
                 self.option_greek_entry[a].insert(0,round(GreekMatrix[j][i],NumDigitsRound)) 
                 a += 1
+                
+    def fillPortMVs(self, PortOptionMVs):
+        for i in range(0, len(PortOptionMVs)):
+                self.EntryBox_Port_Pos_MVs[i].delete(0, 'end')
+                self.EntryBox_Port_Pos_MVs[i].insert(0,round(PortOptionMVs[i],NumDigitsRound)) 
                 
 class SurfacePlotter(tk.Frame):
     def __init__(self, parent, controller):

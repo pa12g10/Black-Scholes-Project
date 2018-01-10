@@ -242,8 +242,8 @@ class BS:
         option_Greeks = []
         if TradeDetailsMatrix[3] == 'Call':
             option_Greeks.append(self.c_delta())
-            option_Greeks.append(self.gammaP())
-            option_Greeks.append(self.vegaP())
+            option_Greeks.append(self.gamma())
+            option_Greeks.append(self.vega())
             option_Greeks.append(self.c_theta())
             option_Greeks.append(self.c_rho())
             option_Greeks.append(self.c_psi())
@@ -252,8 +252,8 @@ class BS:
             option_Greeks.append(self.DdeltaDtime())   
         elif TradeDetailsMatrix[3] == 'Put':
             option_Greeks.append(self.p_delta())
-            option_Greeks.append(self.gammaP())
-            option_Greeks.append(self.vegaP())
+            option_Greeks.append(self.gamma())
+            option_Greeks.append(self.vega())
             option_Greeks.append(self.p_theta())
             option_Greeks.append(self.p_rho())
             option_Greeks.append(self.p_psi())
@@ -268,6 +268,21 @@ class BS:
         
     def scaleUpGreekByOptionQunantityAndSize(self,option_Greeks,ContractSize,Quanity):
         return option_Greeks*ContractSize*Quanity
+    
+    def getMVOptionPosition(self,TradeDetailsMatrix):
+        PutCallPrice = 0
+        PosValue = 0
+        if TradeDetailsMatrix[3] == 'Call':
+            PutCallPrice = self.callOptPrice()  
+        elif TradeDetailsMatrix[3] == 'Put':
+            PutCallPrice = self.putOptPrice()
+        PosValue = self.scaleUpPositionValue(PutCallPrice,TradeDetailsMatrix[4],TradeDetailsMatrix[5])
+        if TradeDetailsMatrix[2] == 'Sell':
+            PosValue = -1*PosValue
+        return PosValue
+        
+    def scaleUpPositionValue(self,PutCallPrice,ContractSize,Quanity):
+        return PutCallPrice*ContractSize*Quanity
   
 def N(X):
         return norm.cdf(X)   

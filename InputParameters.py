@@ -51,4 +51,4 @@ optionTradeDetailsForPlot = array(["Strike:","Maturity (Years) :","Interest rate
 optionTradeDetailsForPlot_initial_values = array([100,1,0.05,0.02,0.25])
 option_BuySell = array(["Buy","Sell"])
 option_CallPut = array(["Call","Put"])
-option_greeks = array([ "delta","gammaP", "vegaP", "theta","rho","psi","carry","DdeltaDvol","DdeltaDtime"])
+option_greeks = array([ "delta","gamma", "vega", "theta","rho","psi","carry","DdeltaDvol","DdeltaDtime"])
