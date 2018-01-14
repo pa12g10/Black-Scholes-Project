@@ -24,11 +24,15 @@ now = datetime.now()
 
 BS_Class_1 = BS(100, 100, 1,1,1,1,'Espen')
 
+width = 0.35
+
+barwidth = 0.5
+
 ToolBarExists = 0.0
 
 PortfolioManagerClassOnOff = 0.0
 
-NumDigitsRound = 3
+NumDigitsRound = 0
 
 VersionNumber = ' v1.01'
 
@@ -39,7 +43,7 @@ DataBaseFileName = "TradeDatabase.csv"
 plot_types = array(['c_delta','p_delta','gamma','gammaP','vega','c_theta',
                     'p_theta','c_rho','p_rho','c_psi','p_psi','c_carry',
                     'p_carry','DdeltaDvol','DdeltaDtime'])
-BS_Model_type = array(['Espen','Norm'])
+BS_Model_type = array(['BachelierThorp','Norm'])
 option_trade_economic_title = array(["Contract Size:","Quantity:","Strike:",
                                           "Start Date (dd-mm-yyyy):","Maturity (dd-mm-yyyy):",
                                           "Interest rate % :","Dividend Yield % :", "sigma :"])

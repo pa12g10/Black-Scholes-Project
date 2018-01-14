@@ -81,7 +81,7 @@ class BS:
         
     #Pricing 
     def d1(self):
-        if self.modelType == 'Espen':
+        if self.modelType == 'BachelierThorp':
             top = log(self.stokePrice / self.strike) + (self.divYield + 0.5*self.sigma*self.sigma)*self.timeMat
         elif self.modelType == 'Norm':
             top = log(self.stokePrice / self.strike) + (self.intRate - self.divYield + 0.5*self.sigma*self.sigma)*self.timeMat
